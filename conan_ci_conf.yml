@@ -6,7 +6,7 @@ leaves:
         - ./profiles/32bits
    
 artifactory:
-   name: arti-pro
+   name: demo-arti
    repo: demo-conan-local
    
 repos:
