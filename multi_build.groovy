@@ -1,6 +1,6 @@
 properties([parameters([string(description: 'Recipe reference that has changed', name: 'name_version', defaultValue: 'LIB_A/1.0'),
-                        string(description: 'User/Channel', name: 'user_channel', defaultValue: 'lasote/stable'),
-                        string(description: 'Config repository URL', name: 'conf_repo_url', defaultValue: 'https://github.com/lasote/skynet_example.git'),
+                        string(description: 'User/Channel', name: 'user_channel', defaultValue: 'jfrog/stable'),
+                        string(description: 'Config repository URL', name: 'conf_repo_url', defaultValue: 'https://github.com/xingao0803/demo-multi-builds.git'),
                         string(description: 'Config repository branch', name: 'conf_repo_branch', defaultValue: 'master'),
                         ])])
 
@@ -20,9 +20,6 @@ def get_build_order_for_leave(ref, leave_name, profiles, repo_branch, repo_url, 
         }
     }
 
-    // profiles_bo:
-    //   {./profiles/osx_64:[[zlib/1.2.8@lasote/stable], [OpenSSL/1.0.2i@lasote/stable]],
-    //    ./profiles/osx_32:[[zlib/1.2.8@lasote/stable], [OpenSSL/1.0.2i@lasote/stable]]}
     return profiles_bo
 }
 
@@ -130,3 +127,4 @@ node {
     }
      }
 }
+

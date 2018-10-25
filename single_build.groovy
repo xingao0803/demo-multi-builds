@@ -3,9 +3,8 @@ properties([parameters([string(description: 'Build label', name: 'build_label', 
                         string(description: 'Name/Version', name: 'name_version', defaultValue: 'LIB_A/1.0'),
                         string(description: 'Profile', name: 'profile', defaultValue: './profiles/64bits'),
                         string(description: 'Config repository branch', name: 'conf_repo_branch', defaultValue: 'master'),
-                        string(description: 'Config repository url', name: 'conf_repo_url', defaultValue: 'https://github.com/lasote/skynet_example.git'),
+                        string(description: 'Config repository url', name: 'conf_repo_url', defaultValue: 'https://github.com/xingao0803/demo-multi-builds.git'),
                        ])])
-String docker_image = 'lasote/conangcc6-armv7'
 
 node {
     
@@ -38,7 +37,7 @@ node {
             // For each profile
             dir("_lib_repo"){
                 dir(data.repos[params.name_version].dir){
-                    client.run(command: "create . lasote/stable -pr \"" + conf_repo_dir + "/" + params.profile + "\"")
+                    client.run(command: "create . jfrog/stable -pr \"" + conf_repo_dir + "/" + params.profile + "\"")
                 }
             }
         }
@@ -59,11 +58,11 @@ node {
             // Mandatory parameters
             'buildName'          : buildInfo.name,
             'buildNumber'        : buildInfo.number,
-            'targetRepo'         : 'conan-prod-local',
+            'targetRepo'         : 'demo-conan-prod',
     
             // Optional parameters
             'comment'            : 'ready for prod',
-            'sourceRepo'         : 'conan-dev-local',
+            'sourceRepo'         : 'demo-conan-local',
             'status'             : 'Released',
             'includeDependencies': true,
             'copy'               : false
