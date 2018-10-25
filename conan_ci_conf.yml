@@ -1,0 +1,46 @@
+
+leaves:
+   PROJECT:
+     profiles:
+        - ./profiles/64bits
+        - ./profiles/32bits
+   
+artifactory:
+   name: arti-pro
+   repo: demo-conan-local
+   
+repos:
+   LIB_A/1.0:
+     url: https://github.com/xingao0803/demo-multi-builds.git
+     branch: master
+     dir: ./recipes/A
+
+   LIB_B/1.0:
+     url: https://github.com/xingao0803/demo-multi-builds.git
+     branch: master
+     dir: ./recipes/B
+
+   LIB_C/1.0:
+     url: https://github.com/xingao0803/demo-multi-builds.git
+     branch: master
+     dir: ./recipes/C
+
+   LIB_D/1.0:
+     url: https://github.com/xingao0803/demo-multi-builds.git
+     branch: master
+     dir: ./recipes/D
+
+   LIB_F/1.0:
+     url: https://github.com/xingao0803/demo-multi-builds.git
+     branch: master
+     dir: ./recipes/F
+
+   LIB_G/1.0:
+     url: https://github.com/xingao0803/demo-multi-builds.git
+     branch: master
+     dir: ./recipes/G
+
+   PROJECT:
+     url: https://github.com/xingao0803/demo-multi-builds.git
+     branch: master
+     dir: ./recipes/PROJECT

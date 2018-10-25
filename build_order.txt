@@ -1,0 +1,3 @@
+cd recipes/PROJECT
+conan info . -bo LIB_A/1.0@jfrog/stable
+[LIB_A/1.0@jfrog/stable], [LIB_B/1.0@jfrog/stable], [LIB_F/1.0@jfrog/stable], [LIB_D/1.0@jfrog/stable, LIB_G/1.0@jfrog/stable]
