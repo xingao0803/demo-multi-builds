@@ -14,6 +14,11 @@ node {
     def conf_repo_dir
     def client
     def serverName
+  
+    // User/Pass for Artifactory server
+    def user_name = 'admin'
+    def user_apikey = 'APBG9f7okturGUX3EH6LhxhbBmR'
+
     withEnv(['PATH+JENKINSHOME=/usr/local/bin']) {
             def server
         stage("Configure/Get repositories"){
@@ -25,10 +30,16 @@ node {
             }
             server = Artifactory.server data.artifactory.name
             client = Artifactory.newConanClient()
-            
+                 
             serverName = client.remote.add server: server, repo: data.artifactory.repo
-            //client.run(command: "remote remove conan.io")
 
+            // Create a local build-info instance:
+            buildInfo = Artifactory.newBuildInfo()      
+            
+            // Login the new conan remote server
+            def command = "user -r ${serverName} -p ${user_apikey} ${user_name}"
+            client.run(command: command.toString(), buildInfo: buildInfo)     
+              
             dir("_lib_repo"){
                 git branch: data.repos[params.name_version].branch, url: data.repos[params.name_version].url
             }
@@ -37,14 +48,14 @@ node {
             // For each profile
             dir("_lib_repo"){
                 dir(data.repos[params.name_version].dir){
-                    client.run(command: "create . jfrog/stable -pr \"" + conf_repo_dir + "/" + params.profile + "\"")
+                    client.run(command: "create . jfrog/stable -pr \"" + conf_repo_dir + "/" + params.profile + "\"", buildInfo: buildInfo)
                 }
             }
         }
         
         stage("Upload Artifactory"){
             String command = "upload * -r ${serverName} --all -c"
-            buildInfo = client.run(command: command)
+            client.run(command: command.toString(), buildInfo: buildInfo)
             buildInfo.env.collect()
             server.publishBuildInfo buildInfo
         }
