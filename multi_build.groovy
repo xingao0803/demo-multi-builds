@@ -4,7 +4,7 @@ properties([parameters([string(description: 'Recipe reference that has changed',
                         string(description: 'Config repository branch', name: 'conf_repo_branch', defaultValue: 'master'),
                         ])])
 
-def get_build_order_for_leave(ref, leave_name, profiles, repo_branch, repo_url, recipe_dir, client, conf_repo_dir) {
+def get_build_order_for_leave(ref, leave_name, profiles, repo_branch, repo_url, recipe_dir, client, conf_repo_dir, serverName) {
     def profiles_bo = [:]
     dir(leave_name + "_repo"){
         echo "Getting leave recipe '${leave_name}' ${repo_branch} ${repo_url}"
@@ -12,7 +12,7 @@ def get_build_order_for_leave(ref, leave_name, profiles, repo_branch, repo_url, 
         dir(recipe_dir){
             for(profile in profiles){
                 profiles_bo[profile] = []
-                client.run(command: "info . -bo " + ref + " --json bo.json --profile \"" + conf_repo_dir + "/" + profile+ "\"")
+                client.run(command: "info . -r " + serverName + " -bo " + ref + " --json bo.json --profile \"" + conf_repo_dir + "/" + profile+ "\"")
                 def bo_json = readJSON file: "./bo.json"
                 profiles_bo[profile].addAll(bo_json["groups"])
                 echo "Build order for recipe '${ref}' is " + bo_json
@@ -91,6 +91,7 @@ node {
     def data
     def conf_repo_dir
     def client
+    def serverName
 
     stage("Configure/Get repositories"){
         dir("_conf_repo"){
@@ -101,8 +102,7 @@ node {
         }
         def server = Artifactory.server data.artifactory.name
         client = Artifactory.newConanClient()
-        def serverName = client.remote.add server: server, repo: data.artifactory.repo
-        //client.run(command: "remote remove conan.io")
+        serverName = client.remote.add server: server, repo: data.artifactory.repo
     }
 
     stage("Fire deps"){
@@ -118,7 +118,7 @@ node {
                 def repo = data.repos.get(leave_name)
                 profiles_bo = get_build_order_for_leave(ref, leave_name, profiles, repo.branch,
                                                         repo.url, repo.dir, client,
-                                                        conf_repo_dir)
+                                                        conf_repo_dir, serverName)
                 def tasks_groups = get_tasks_groups(profiles_bo)
                 echo "Running in parallel: ${tasks_groups}"
                 launch_task_group(tasks_groups, params.conf_repo_url, params.conf_repo_branch)
@@ -127,4 +127,3 @@ node {
     }
      }
 }
-
