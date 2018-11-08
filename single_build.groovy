@@ -14,11 +14,6 @@ node {
     def conf_repo_dir
     def client
     def serverName
-  
-    // User/Pass for Artifactory server
-    def user_name = 'admin'
-    def user_apikey = 'APBG9f7okturGUX3EH6LhxhbBmR'
-
     withEnv(['PATH+JENKINSHOME=/usr/local/bin']) {
             def server
         stage("Configure/Get repositories"){
@@ -30,16 +25,10 @@ node {
             }
             server = Artifactory.server data.artifactory.name
             client = Artifactory.newConanClient()
-                 
-            serverName = client.remote.add server: server, repo: data.artifactory.repo
-
-            // Create a local build-info instance:
-            buildInfo = Artifactory.newBuildInfo()      
             
-            // Login the new conan remote server
-            def command = "user -r ${serverName} -p ${user_apikey} ${user_name}"
-            client.run(command: command.toString(), buildInfo: buildInfo)     
-              
+            serverName = client.remote.add server: server, repo: data.artifactory.repo
+            //client.run(command: "remote remove conan.io")
+
             dir("_lib_repo"){
                 git branch: data.repos[params.name_version].branch, url: data.repos[params.name_version].url
             }
@@ -48,40 +37,20 @@ node {
             // For each profile
             dir("_lib_repo"){
                 dir(data.repos[params.name_version].dir){
-                    client.run(command: "create . jfrog/stable -pr \"" + conf_repo_dir + "/" + params.profile + "\"", buildInfo: buildInfo)
+                    client.run(command: "create . jfrog/stable -r " + serverName + " -pr \"" + conf_repo_dir + "/" + params.profile + "\"")
                 }
             }
         }
         
         stage("Upload Artifactory"){
-            String command = "upload * -r ${serverName} --all -c"
-            client.run(command: command.toString(), buildInfo: buildInfo)
+            String command = "upload * -r ${serverName} --all -c --force"
+            buildInfo = client.run(command: command)
             buildInfo.env.collect()
             server.publishBuildInfo buildInfo
         }
         
         stage("Test"){
                
-        }
-        
-        stage("Promote"){
-            def promotionConfig = [
-            // Mandatory parameters
-            'buildName'          : buildInfo.name,
-            'buildNumber'        : buildInfo.number,
-            'targetRepo'         : 'demo-conan-prod',
-    
-            // Optional parameters
-            'comment'            : 'ready for prod',
-            'sourceRepo'         : 'demo-conan-local',
-            'status'             : 'Released',
-            'includeDependencies': true,
-            'copy'               : false
-        ]
-
-        // Promote build
-        server.promote promotionConfig   
-        
         }
         
     }
