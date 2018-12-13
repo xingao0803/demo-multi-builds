@@ -1,7 +1,7 @@
 properties([parameters([string(description: 'Recipe reference that has changed', name: 'name_version', defaultValue: 'LIB_A/1.0'),
                         string(description: 'User/Channel', name: 'user_channel', defaultValue: 'jfrog/stable'),
                         string(description: 'Config repository URL', name: 'conf_repo_url', defaultValue: 'https://github.com/xingao0803/demo-multi-builds.git'),
-                        string(description: 'Config repository branch', name: 'conf_repo_branch', defaultValue: 'master')，
+                        string(description: 'Config repository branch', name: 'conf_repo_branch', defaultValue: 'master')
                         ])])
                         
 import groovy.transform.Field
@@ -91,7 +91,7 @@ def launch_task_group(tasks_groups, conf_repo_url, conf_repo_branch){
                                  string(name: "name_version", value: a_build["name_version"]),
                                  string(name: "profile", value: a_build["profile"],
                                  string(name: "conf_repo_url", value: conf_repo_url),
-                                 string(name: "conf_repo_branch", value: conf_repo_branch)，
+                                 string(name: "conf_repo_branch", value: conf_repo_branch)
                               ]
                        )
             }
