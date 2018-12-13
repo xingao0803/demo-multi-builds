@@ -5,10 +5,6 @@ leaves:
         - ./profiles/64bits
         - ./profiles/32bits
    
-artifactory:
-   name: demo-arti
-   repo: demo-conan-local
-   
 repos:
    LIB_A/1.0:
      url: https://github.com/xingao0803/demo-multi-builds.git
