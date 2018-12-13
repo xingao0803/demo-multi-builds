@@ -3,6 +3,8 @@ properties([parameters([string(description: 'Recipe reference that has changed',
                         string(description: 'Config repository URL', name: 'conf_repo_url', defaultValue: 'https://github.com/xingao0803/demo-multi-builds.git'),
                         string(description: 'Config repository branch', name: 'conf_repo_branch', defaultValue: 'master'),
                         ])])
+                        
+import groovy.transform.Field
 
 // Artifactory server instance, defined in Jenkins --> Manage:
 @Field def artifactory_server = 'demo-arti'
