@@ -5,14 +5,14 @@ properties([parameters([string(description: 'Recipe reference that has changed',
                         ])])
 
 // Artifactory server instance, defined in Jenkins --> Manage:
-def artifactory_server = 'demo-arti'
+@Field def artifactory_server = 'demo-arti'
 
 // Conan repository in Artifactory server
-def artifactory_repo = 'demo-conan-local'
+@Field def artifactory_repo = 'demo-conan-local'
 
 // User/Pass for Artifactory server
-def user_name = 'admin'
-def user_apikey = 'APBG9f7okturGUX3EH6LhxhbBmR'
+@Field def user_name = 'admin'
+@Field def user_apikey = 'APBG9f7okturGUX3EH6LhxhbBmR'
 
 def get_build_order_for_leave(ref, leave_name, profiles, repo_branch, repo_url, recipe_dir, client, conf_repo_dir, serverName) {
     def profiles_bo = [:]
