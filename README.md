@@ -2,7 +2,7 @@
 
 * Install in Jenkins the "Pipeline Utility Steps": plugin, which is necessary to parse Yaml
 
-* Generate ad upload all recipes and packages to Artifactory repository at first
+* Generate and upload all recipes and packages to Artifactory repository at first
 
     + Run it locally
     ```
