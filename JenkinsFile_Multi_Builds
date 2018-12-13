@@ -89,7 +89,7 @@ def launch_task_group(tasks_groups, conf_repo_url, conf_repo_branch){
                                  string(name: "username", value: a_build["user"]),
                                  string(name: "channel", value: a_build["channel"]),
                                  string(name: "name_version", value: a_build["name_version"]),
-                                 string(name: "profile", value: a_build["profile"],
+                                 string(name: "profile", value: a_build["profile"]),
                                  string(name: "conf_repo_url", value: conf_repo_url),
                                  string(name: "conf_repo_branch", value: conf_repo_branch)
                               ]
