@@ -4,6 +4,16 @@ properties([parameters([string(description: 'Recipe reference that has changed',
                         string(description: 'Config repository branch', name: 'conf_repo_branch', defaultValue: 'master'),
                         ])])
 
+// Artifactory server instance, defined in Jenkins --> Manage:
+def artifactory_server = 'demo-arti'
+
+// Conan repository in Artifactory server
+def artifactory_repo = 'demo-conan-local'
+
+// User/Pass for Artifactory server
+def user_name = 'admin'
+def user_apikey = 'APBG9f7okturGUX3EH6LhxhbBmR
+
 def get_build_order_for_leave(ref, leave_name, profiles, repo_branch, repo_url, recipe_dir, client, conf_repo_dir, serverName) {
     def profiles_bo = [:]
     dir(leave_name + "_repo"){
@@ -19,7 +29,6 @@ def get_build_order_for_leave(ref, leave_name, profiles, repo_branch, repo_url, 
             }
         }
     }
-
     return profiles_bo
 }
 
@@ -38,12 +47,14 @@ def get_tasks_groups(profiles_bo){
             }
             for(ref in profile[1][group_index]){
                 string name_p = ref.split("@")[0]
+                string user = ref.split("@")[1].split("/")[0]
                 string channel = ref.split("@")[1].split("/")[1]
                 string task_name = ref + "_" + profile[0]
                 string prof_name = profile[0].split("/").last()
                 tasks.add([build_label: ref + " (${prof_name})",
                            ref: ref,
                            name_version: name_p,
+                           user: user,
                            channel: channel,
                            profile: profile[0]])
             }
@@ -66,14 +77,20 @@ def launch_task_group(tasks_groups, conf_repo_url, conf_repo_branch){
             def a_build = tasks_groups[i][j]
             def label = a_build["build_label"]
             echo "BUILD: ${a_build}"
-            tasks[label] = { -> build(job: "conan-single-build",
+            tasks[label] = { -> build(job: "4.3Conan_Single_Build",
                               parameters: [
+                                 string(name: "artifactory_name", value: artifactory_server),
+                                 string(name: "artifactory_repo", value: artifactory_repo),
+                                 string(name: "artifactory_user", value: user_name),
+                                 string(name: "artifactory_apikey", value: user_apikey),
                                  string(name: "build_label", value: label),
+                                 string(name: "username", value: a_build["user"]),
                                  string(name: "channel", value: a_build["channel"]),
                                  string(name: "name_version", value: a_build["name_version"]),
+                                 string(name: "profile", value: a_build["profile"],
                                  string(name: "conf_repo_url", value: conf_repo_url),
                                  string(name: "conf_repo_branch", value: conf_repo_branch),
-                                 string(name: "profile", value: a_build["profile"])
+                                 )
                               ]
                        )
             }
@@ -86,44 +103,54 @@ def launch_task_group(tasks_groups, conf_repo_url, conf_repo_branch){
 
 
 node {
-     withEnv(['PATH+JENKINSHOME=/usr/local/bin']) {
-    currentBuild.displayName = "Rebuild of " + params.name_version
-    def data
-    def conf_repo_dir
-    def client
-    def serverName
+    withEnv(['PATH+JENKINSHOME=/usr/local/bin']) {
+        currentBuild.displayName = "Rebuild of " + params.name_version
+        def data
+        def conf_repo_dir
+        def client
+        def serverName
+        
+        stage("Configure/Get repositories"){
+            dir("_conf_repo"){
+                git branch: params.conf_repo_branch, url: params.conf_repo_url
+                data = readYaml file: "conan_ci_conf.yml"
+                conf_repo_dir = pwd()
+            }
+ 
+            // Obtain an Artifactory server instance: 
+            def server = Artifactory.server artifactory_server
 
-    stage("Configure/Get repositories"){
-        dir("_conf_repo"){
-            git branch: params.conf_repo_branch, url: params.conf_repo_url
-            data = readYaml file: "conan_ci_conf.yml"
-            conf_repo_dir = pwd()
-            artifactory = data.artifactory
+            // Create a conan client instance:
+            client = Artifactory.newConanClient()
+ 
+            // Add a new repository to the conan client.
+            // The 'remote.add' method returns a 'serverName' string, which is used later in the script:
+            serverName = client.remote.add server: server, repo: artifactory_repo
+ 
+            // Login the new conan remote server
+            def command = "user -r ${serverName} -p ${user_apikey} ${user_name}"
+            client.run(command: command.toString())
         }
-        def server = Artifactory.server data.artifactory.name
-        client = Artifactory.newConanClient()
-        serverName = client.remote.add server: server, repo: data.artifactory.repo
-    }
 
-    stage("Fire deps"){
-        def ref = params.name_version + "@" + params.user_channel
-        def user = params.user_channel.split("/")[0]
-        def channel = params.user_channel.split("/")[1]
-        def leaves = entries(data.leaves)
-        withEnv(["CONAN_USERNAME=${user}", "CONAN_CHANNEL=${channel}"]){
-            for (int i = 0; i < leaves.size(); i++) {
-                def leave = leaves.get(i)
-                def leave_name = leave[0];
-                def profiles = leave[1]["profiles"];
-                def repo = data.repos.get(leave_name)
-                profiles_bo = get_build_order_for_leave(ref, leave_name, profiles, repo.branch,
+        stage("Fire deps"){
+            def ref = params.name_version + "@" + params.user_channel
+            def user = params.user_channel.split("/")[0]
+            def channel = params.user_channel.split("/")[1]
+            def leaves = entries(data.leaves)
+            withEnv(["CONAN_USERNAME=${user}", "CONAN_CHANNEL=${channel}"]){
+                for (int i = 0; i < leaves.size(); i++) {
+                    def leave = leaves.get(i)
+                    def leave_name = leave[0];
+                    def profiles = leave[1]["profiles"];
+                    def repo = data.repos.get(leave_name)
+                    profiles_bo = get_build_order_for_leave(ref, leave_name, profiles, repo.branch,
                                                         repo.url, repo.dir, client,
                                                         conf_repo_dir, serverName)
-                def tasks_groups = get_tasks_groups(profiles_bo)
-                echo "Running in parallel: ${tasks_groups}"
-                launch_task_group(tasks_groups, params.conf_repo_url, params.conf_repo_branch)
+                    def tasks_groups = get_tasks_groups(profiles_bo)
+                    echo "Running in parallel: ${tasks_groups}"
+                    launch_task_group(tasks_groups, params.conf_repo_url, params.conf_repo_branch)
+                }
             }
         }
     }
-     }
 }
