@@ -41,7 +41,7 @@ node {
             buildInfo = Artifactory.newBuildInfo()
         
             // Login the new conan remote server
-            def command = "user -r ${serverName} -p ${params.artifactory_apikey} ${params.artifactory_user}"
+            String command = "user -r ${serverName} -p ${params.artifactory_apikey} ${params.artifactory_user}"
             client.run(command: command.toString())
           
             dir("_lib_repo"){
