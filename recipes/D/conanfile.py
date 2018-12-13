@@ -7,7 +7,7 @@ class DConan(ConanFile):
     version = "1.0"
     license = "MIT"
     url = "https://github.com/xingao0803/demo-multi-builds"
-    settings = "os", "compiler", "build_type", "arch", "arch_build"
+    settings = "os", "compiler", "build_type", "arch"
     os.environ["CONAN_CHANNEL"] = "stable"
     os.environ["CONAN_USERNAME"] = "jfrog"
  
